@@ -1,0 +1,62 @@
+//import java.math.BigDecimal;
+/*
+* This class implements the Cosseno metric distance function.
+* @class Cosseno implementation.
+* */
+public class Cosseno extends DistanceFunction {
+	
+	/*
+	 * Cosseno constructor.
+	 * */
+	public Cosseno() {
+		
+		super();
+	}
+	
+	/*
+	 * Calculates the distance between instances s1 and s2.
+	 * @param s1 First instance
+	 * @param s2 Second instance
+	 * @return The Cosseno distance between s1 and s2 
+	 * */
+	public double getDistance(Instance s1, Instance s2) {
+		
+		incrementStatistics();
+		double answer = 0.0;
+		Produto_Interno df = new Produto_Interno();
+	    double sum1 = df.getDistance(s1, s2);
+	    double sum2 = 0.0;
+	    double sum3 = 0.0;
+		
+		if (s1.getSize() != s2.getSize()){
+			throw new IndexOutOfBoundsException("The number of S1 dimensions is " + s1.getSize() + ", but S2 has " + s2.getSize() + " dimensions.");
+		}
+
+		for (int x = 0; x < s1.getSize(); x++){
+			sum2 += Math.pow(s1.getValue(x), 2);
+			sum3 += Math.pow(s2.getValue(x), 2);
+		}
+		
+		//answer = Double.valueOf(formatter.format(answer));
+
+		if (sum2 >= 0) {
+			sum2 = Math.sqrt(sum2);
+		} else {
+			return 0.0;
+		}
+		
+		if (sum3 >= 0) {
+			sum3 = Math.sqrt(sum3);
+		} else {
+			return 0.0;
+		}
+		
+		if ((sum2 * sum3) == 0) {
+			return 0.0;
+		}
+		
+		answer = (sum1 / (sum2 * sum3));
+		return Truncate(2, answer);
+	}
+	
+}

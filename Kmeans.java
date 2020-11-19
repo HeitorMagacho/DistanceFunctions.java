@@ -1,6 +1,3 @@
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
-
 public class Kmeans {
 
 	DistanceFunction df;
@@ -9,47 +6,19 @@ public class Kmeans {
 	int k;
 	int maxIterations;
 
-	public Kmeans(Dataset dataset, int maxIterations) {
+	public Kmeans(Dataset dataset, int maxIterations, int[] element) {
 		
-		RadioButton radioButtonFrame;
-		
-		radioButtonFrame = new RadioButton();
-		radioButtonFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		radioButtonFrame.setResizable(false);
-		radioButtonFrame.setSize(200, 500);
-
 		this.dataset = dataset;
 		this.maxIterations = maxIterations;
-		int[] element = chooseInstance();
+		this.k = element.length;
 		cluster = new Cluster[k];
 		for (int x = 0; x < k; x++) {
 			cluster[x] = new Cluster(dataset.getInstance(element[x]), dataset.getCardinality(), dataset.getDimensionality());
 		}
-		radioButtonFrame.setVisible(true);
-		while (radioButtonFrame.isVisible()) {try { Thread.sleep (1000); } catch (InterruptedException ex) {}}
-		this.df = radioButtonFrame.getDf();
 	}
 	
 	public void setDF(DistanceFunction df) {
 		this.df = df;
-	}
-	
-	public int[] chooseInstance() {
-
-		int k = 0;
-
-		while (k == 0) {
-			k = Integer.parseInt(JOptionPane.showInputDialog("How many Clusters?"));
-		}
-		this.k = k;
-		int[] element = new int[k];
-		for(int x = 0; x < k; x++) {
-			element[x] = -1;
-			while (element[x] == -1) {
-				element[x] = Integer.parseInt(JOptionPane.showInputDialog("Instance "+x+":"));
-			}
-		}
-		return element;
 	}
 
 	public void kmeansFunction() {
@@ -57,6 +26,7 @@ public class Kmeans {
 		double[] r = new double[k];
 		double min;
 		int minPos;
+		boolean brk = false;;
 
 		for (int i = 0; i < maxIterations; i++) {   //Iterations
 			
@@ -98,12 +68,17 @@ public class Kmeans {
 			}
 
 			for (int y = 0; y < k; y++) {
-				if (calculateAverage(cluster[y]) == null) {
-					i = maxIterations;
-				} else {
-					cluster[y].setHead(calculateAverage(cluster[y]));
+				Instance average = calculateAverage(cluster[y]);
+				if (!hasChange(average, cluster[y].getHead())) {
+					cluster[y].setHead(average);
 					cluster[y].resetTop();
+				} else {
+					brk = true;
+					break;
 				}
+			}
+			if (brk) {
+				break;
 			}
 		}
 	}
@@ -111,10 +86,9 @@ public class Kmeans {
 	public Instance calculateAverage(Cluster cluster) {
 
 		double d = 0;
-		boolean end;
 		Instance mean = new Instance();
 
-		for (int x = 0; x < dataset.getDimensionality(); x++) { //dimenção
+		for (int x = 0; x < dataset.getDimensionality(); x++) { //dimenÃ§Ã£o
 			d = 0;
 			for (int y = 0; y < cluster.getTop(); y++) { // tamanho do cluster
 				d += cluster.getBody().getInstance(y).getValue(x);
@@ -122,17 +96,10 @@ public class Kmeans {
 			d /= dataset.getDimensionality();
 			mean.setValue(d, x);
 		}
-
-		end = checkEnd(mean, cluster.getHead());
-
-		if (end) {
-			return null;
-		} else {
-			return mean;
-		}
+		return mean;
 	}
 
-	public boolean checkEnd(Instance mean, Instance head) {
+	public boolean hasChange(Instance mean, Instance head) {
 
 		boolean end = true;
 
@@ -178,21 +145,22 @@ public class Kmeans {
 		*/
 	}
 
-	public void cohesion() {
+	public double cohesion() {
 
-		double[] cohesion;
+		double cohesion = 0;
 
 		for (int x = 0; x < k; x++) {
-			cohesion = new double[cluster[x].getTop()];
 			for (int y = 0; y < cluster[x].getTop(); y++) {
-				cohesion[y] = df.getDistance(cluster[x].getHead(), dataset.getInstance(cluster[x].getPos().getValue(y)));
+				cohesion += df.getDistance(cluster[x].getHead(), dataset.getInstance(cluster[x].getPos().getValue(y)));
 			}
-			cluster[x].setCohesion(cohesion);
 		}
+		
+		return cohesion;
 	}
 
-	public void separation() {
+	public double separation() {
 
+		double separation = 0;
 		double d;
 		Instance finalAverage = new Instance();
 
@@ -206,7 +174,8 @@ public class Kmeans {
 		}
 
 		for (int x = 0; x < k; x++) {
-			cluster[x].setSeparation(df.getDistance(cluster[x].getHead(), finalAverage));
+			separation += (df.getDistance(cluster[x].getHead(), finalAverage));
 		}
+		return separation;
 	}
 }

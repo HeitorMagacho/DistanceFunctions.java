@@ -2,43 +2,36 @@ public class Cluster {
 
 	Instance head;
 	InstanceInt pos;
-	Dataset body;
 	int top;
-	double[] cohesion;
-	double separation;
 
 	public Cluster(Instance h, int c, int d) {
 
-		pos = new InstanceInt();
-		head = new Instance();
-		body = new Dataset(c, d);
-		body.setNew();
+		this.pos = new InstanceInt();
+		this.head = new Instance();
 
 		for (int x = 0; x < h.getSize(); x++) {
 			this.head.setValue(h.getValue(x), x);
 		}
 
-		top = 0;
+		setTop(0);
+	}
+	
+	public void addInstance(Instance instance, int pos) {
+
+		this.pos.setValue(pos, top);
+		setTop(getTop() + 1);
+	}
+
+	public void setHead(Instance head) {
+
+		this.head = new Instance();
+		for (int x = 0; x < head.getSize(); x++) {
+			this.head.setValue(head.getValue(x), x);
+		}
 	}
 
 	public InstanceInt getPos() {
 		return pos;
-	}
-
-	public double[] getCohesion() {
-		return cohesion;
-	}
-
-	public void setCohesion(double[] cohesion) {
-		this.cohesion = cohesion;
-	}
-
-	public double getSeparation() {
-		return separation;
-	}
-
-	public void setSeparation(double separation) {
-		this.separation = separation;
 	}
 
 	public void setTop (int top) {
@@ -53,26 +46,7 @@ public class Cluster {
 		setTop(0);
 	}
 
-	public void addInstance(Instance instance, int pos) {
-
-		this.pos.setValue(pos, top);
-		body.setData(instance, top);
-		setTop(getTop() + 1);
-	}
-
-	public Dataset getBody() {
-		return body;
-	}
-
 	public Instance getHead() {
 		return head;
-	}
-
-	public void setHead(Instance head) {
-
-		this.head = new Instance();
-		for (int x = 0; x < head.getSize(); x++) {
-			this.head.setValue(head.getValue(x), x);
-		}
 	}
 }

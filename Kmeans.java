@@ -7,7 +7,7 @@ public class Kmeans {
 	int maxIterations;
 
 	public Kmeans(Dataset dataset, int maxIterations, int[] element) {
-		
+
 		this.dataset = dataset;
 		this.maxIterations = maxIterations;
 		this.k = element.length;
@@ -17,6 +17,17 @@ public class Kmeans {
 		}
 	}
 	
+	public Kmeans(Dataset dataset, int maxIterations, Instance[] element) {
+
+		this.dataset = dataset;
+		this.maxIterations = maxIterations;
+		this.k = element.length;
+		cluster = new Cluster[k];
+		for (int x = 0; x < k; x++) {
+			cluster[x] = new Cluster(element[x], dataset.getCardinality(), dataset.getDimensionality());
+		}
+	}
+
 	public void setDF(DistanceFunction df) {
 		this.df = df;
 	}
@@ -26,28 +37,18 @@ public class Kmeans {
 		double[] r = new double[k];
 		double min;
 		int minPos;
-		boolean brk = false;;
+		boolean hc = true;
 
 		for (int i = 0; i < maxIterations; i++) {   //Iterations
-			
-			//@debug
-			for (int x = 0; x < k; x++) {
-				System.out.print("Head - C[" + x +"]: ");
-				for (int y = 0; y < dataset.getDimensionality(); y++) {
-					System.out.print(cluster[x].getHead().getValue(y) + " ");
-				}
-				System.out.println();
-			}
-			//--
-			
+			System.out.println("iteration: "+i);
 			for (int x = 0; x < dataset.getCardinality(); x++) {  //Cardinality
 				min = (Double.MAX_VALUE);
 				minPos = -1;
-				for (int y = 0; y < k; y++) {                    //Cluster size
+				for (int y = 0; y < k; y++) {  //Cluster size
 					r[y] = df.getDistance(cluster[y].getHead(), dataset.getInstance(x));
 
 					//@debug
-					System.out.println("d(C"+y+",X"+x+"): " + r[y]);
+					//System.out.println("d(C"+y+",X"+x+"): " + r[y]);
 					//--
 				}
 
@@ -56,31 +57,63 @@ public class Kmeans {
 						min = r[y];
 						minPos = y;
 					}
-					//tratar se for (==)
 				}
 
 				//@debug
-				System.out.println("min == "+min);
-				System.out.println("C["+minPos+"] <-- X"+x);
+				//System.out.println("min == "+min);
+				//System.out.println("C["+minPos+"] <-- X"+x);
 				//--
 
 				cluster[minPos].addInstance(dataset.getInstance(x), x);
 			}
 
-			for (int y = 0; y < k; y++) {
-				Instance average = calculateAverage(cluster[y]);
-				if (!hasChange(average, cluster[y].getHead())) {
-					cluster[y].setHead(average);
-					cluster[y].resetTop();
-				} else {
-					brk = true;
-					break;
+			hc = false;
+
+			if (i < maxIterations-1) {
+				for (int y = 0; y < k; y++) {
+					Instance average = calculateAverage(cluster[y]);
+					if ((!hasChange(average, cluster[y].getHead())) && (i < maxIterations)) {
+						cluster[y].setHead(average);
+					} else {
+						i = maxIterations;
+						hc = true;
+					}
+				}
+				if (!hc) {
+					for (int y = 0; y < k; y++) {
+						cluster[y].resetTop();
+					}
 				}
 			}
-			if (brk) {
-				break;
+		}
+	}
+	
+	public void printCentroid() {
+		for (int x = 0; x < k; x++) {
+			for (int y = 0; y < dataset.getDimensionality(); y++) {
+				System.out.print(cluster[x].getHead().getValue(y));
+				if (y != dataset.getDimensionality()-1) {
+					System.out.print(",");
+				}
+			}
+			System.out.println();
+		}
+	}
+	
+	public String outCentroid() {
+		
+		String out = "";
+		for (int x = 0; x < k; x++) {
+			for (int y = 0; y < dataset.getDimensionality(); y++) {
+				out += cluster[x].getHead().getValue(y);
+				if (y != dataset.getDimensionality()-1) {
+					out += ",";
+				} else {
+					out += "\n";
+				}
 			}
 		}
+		return out;
 	}
 
 	public Instance calculateAverage(Cluster cluster) {
@@ -91,9 +124,9 @@ public class Kmeans {
 		for (int x = 0; x < dataset.getDimensionality(); x++) { //dimenção
 			d = 0;
 			for (int y = 0; y < cluster.getTop(); y++) { // tamanho do cluster
-				d += cluster.getBody().getInstance(y).getValue(x);
+				d += dataset.getInstance(cluster.getPos().getValue(y)).getValue(x);
 			}
-			d /= dataset.getDimensionality();
+			d /= cluster.getTop();
 			mean.setValue(d, x);
 		}
 		return mean;
@@ -112,14 +145,14 @@ public class Kmeans {
 		return end;
 	}
 
-	public void printCluster() {
+	public void printClusterInstaneces() {
 
 		for (int x = 0; x < k; x++) {
 			System.out.println("C" + x + ": ");
 			for (int y = 0; y < cluster[x].getTop(); y++) {
 				System.out.print("{");
 				for (int z = 0; z < dataset.getDimensionality(); z++) {
-					System.out.print(cluster[x].getBody().getInstance(y).getValue(z));
+					System.out.print(dataset.getInstance(cluster[x].getPos().getValue(y)).getValue(x));
 					if (z != dataset.getDimensionality()-1) {
 						System.out.print(" ");
 					}
@@ -127,22 +160,13 @@ public class Kmeans {
 				System.out.println("}");
 			}
 		}
-
-		/*
+	}
+	
+	public void printCluster() {
+		
 		for (int x = 0; x < k; x++) {
-			System.out.print("Cohesion["+x+"]: {");
-			for (int y = 0; y < cluster[x].getTop(); y++) {
-				System.out.print(cluster[x].getCohesion()[y]);
-				if (y != cluster[x].getTop()-1) {
-					System.out.print(" ");
-				}
-			}
-			System.out.println("}");
-
-			System.out.println("Separation: " + cluster[x].getSeparation());
-
+			System.out.println("C"+x+": "+cluster[x].getTop()+" ("+(double)cluster[x].getTop()*100/dataset.getCardinality()+"%)");
 		}
-		*/
 	}
 
 	public double cohesion() {
@@ -154,7 +178,7 @@ public class Kmeans {
 				cohesion += df.getDistance(cluster[x].getHead(), dataset.getInstance(cluster[x].getPos().getValue(y)));
 			}
 		}
-		
+
 		return cohesion;
 	}
 
@@ -176,6 +200,7 @@ public class Kmeans {
 		for (int x = 0; x < k; x++) {
 			separation += (df.getDistance(cluster[x].getHead(), finalAverage));
 		}
+		
 		return separation;
 	}
 }

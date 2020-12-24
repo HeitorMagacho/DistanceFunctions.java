@@ -2,11 +2,13 @@ public class Cluster {
 
 	Instance head;
 	InstanceInt pos;
+	InstanceInt oldPos;
 	int top;
 
 	public Cluster(Instance h, int c, int d) {
 
 		this.pos = new InstanceInt();
+		this.oldPos = new InstanceInt();
 		this.head = new Instance();
 
 		for (int x = 0; x < h.getSize(); x++) {
@@ -16,7 +18,7 @@ public class Cluster {
 		setTop(0);
 	}
 	
-	public void addInstance(Instance instance, int pos) {
+	public void addInstance(int pos) {
 
 		this.pos.setValue(pos, top);
 		setTop(getTop() + 1);
@@ -33,6 +35,10 @@ public class Cluster {
 	public InstanceInt getPos() {
 		return pos;
 	}
+	
+	public InstanceInt getOldPos() {
+		return oldPos;
+	}
 
 	public void setTop (int top) {
 		this.top = top;
@@ -44,6 +50,9 @@ public class Cluster {
 
 	public void resetTop() {
 		setTop(0);
+		oldPos = new InstanceInt();
+		oldPos = pos;
+		pos = new InstanceInt();
 	}
 
 	public Instance getHead() {

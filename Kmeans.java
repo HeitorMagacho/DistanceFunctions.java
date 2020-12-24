@@ -5,7 +5,6 @@ public class Kmeans {
 	Cluster[] cluster;
 	int k;
 	int maxIterations;
-	//ProgressBar progressBar = new ProgressBar();
 
 	public Kmeans(Dataset dataset, int maxIterations, int[] element) {
 
@@ -39,22 +38,17 @@ public class Kmeans {
 		double min;
 		int minPos;
 		
-		//progressBar.setVisible(true);
-		//progressBar.setMaximum(k);
 		for (int i = 0; i < maxIterations; i++) {
-			//progressBar.setValue(0);
 			System.out.println("iteration: "+(i+1));
 			for (int x = 0; x < dataset.getCardinality(); x++) {
 				min = (Double.MAX_VALUE);
 				minPos = -1;
-				//progressBar.setString("x = "+x);
 				for (int y = 0; y < k; y++) {
 					r = df.getDistance(cluster[y].getHead(), dataset.getInstance(x));
 					if (r < min) {
 						min = r;
 						minPos = y;
 					}
-					//progressBar.upValue();
 				}
 				cluster[minPos].addInstance(x);
 				System.out.println(".");
@@ -70,7 +64,6 @@ public class Kmeans {
 				}
 			}
 		}
-		//progressBar.setVisible(false);
 	}
 
 	public boolean hasChange() {

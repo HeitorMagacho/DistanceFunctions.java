@@ -51,7 +51,6 @@ public class Kmeans {
 					}
 				}
 				cluster[minPos].addInstance(x);
-				System.out.println(".");
 			}
 			if (i < maxIterations-1) {
 				if (hasChange()) {
